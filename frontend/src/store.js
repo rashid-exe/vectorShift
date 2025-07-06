@@ -10,6 +10,15 @@ export const useStore = create((set, get) => ({
   nodes: [],
   edges: [],
   nodeIDs: {},
+   
+  removeNode: (nodeId) => {
+  set({
+    nodes: get().nodes.filter((node) => node.id !== nodeId),
+    edges: get().edges.filter(
+      (edge) => edge.source !== nodeId && edge.target !== nodeId
+    ),
+  });
+},
 
   getNodeID: (type) => {
     const newIDs = { ...get().nodeIDs };
@@ -58,6 +67,12 @@ export const useStore = create((set, get) => ({
     });
   },
 
+  removeEdge: (edgeId) => {
+    set({
+      edges: get().edges.filter((e) => e.id !== edgeId),
+    });
+  },
+
   updateNodeField: (nodeId, fieldName, fieldValue) => {
     set({
       nodes: get().nodes.map((node) => {
@@ -67,7 +82,7 @@ export const useStore = create((set, get) => ({
             data: {
               ...node.data,
               [fieldName]: fieldValue,
-              __v: Date.now(), // 👈 forces re-render
+              __v: Date.now(), 
             },
           };
         }
@@ -76,3 +91,4 @@ export const useStore = create((set, get) => ({
     });
   },
 }));
+

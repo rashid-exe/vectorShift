@@ -1,5 +1,10 @@
-import { useState, useRef, useCallback } from 'react';
-import ReactFlow, { Controls, Background, MiniMap } from 'reactflow';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import ReactFlow, {
+  Controls,
+  Background,
+  MiniMap,
+  useOnSelectionChange,
+} from 'reactflow';
 import { useStore } from './store';
 import { shallow } from 'zustand/shallow';
 
@@ -38,11 +43,15 @@ const selector = (state) => ({
   onNodesChange: state.onNodesChange,
   onEdgesChange: state.onEdgesChange,
   onConnect: state.onConnect,
+  removeEdge: state.removeEdge,
 });
 
 export const PipelineUI = () => {
   const reactFlowWrapper = useRef(null);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  const [selectedEdge, setSelectedEdge] = useState(null);
+  const [edgeCenter, setEdgeCenter] = useState(null);
+
   const {
     nodes,
     edges,
@@ -50,48 +59,87 @@ export const PipelineUI = () => {
     addNode,
     onNodesChange,
     onEdgesChange,
-    onConnect
+    onConnect,
+    removeEdge,
   } = useStore(selector, shallow);
 
-  const getInitNodeData = (nodeID, type) => {
-    return { id: nodeID, nodeType: `${type}` };
-  };
+  const getInitNodeData = (nodeID, type) => ({
+    id: nodeID,
+    nodeType: type,
+  });
 
-  const onDrop = useCallback((event) => {
-    event.preventDefault();
+  const onDrop = useCallback(
+    (event) => {
+      event.preventDefault();
+      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
+      const appDataRaw = event?.dataTransfer?.getData('application/reactflow');
+      if (appDataRaw) {
+        const appData = JSON.parse(appDataRaw);
+        const type = appData?.nodeType;
+        if (!type) return;
 
-    const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
-    const appDataRaw = event?.dataTransfer?.getData('application/reactflow');
-    if (appDataRaw) {
-      const appData = JSON.parse(appDataRaw);
-      const type = appData?.nodeType;
+        const position = reactFlowInstance.project({
+          x: event.clientX - reactFlowBounds.left,
+          y: event.clientY - reactFlowBounds.top,
+        });
 
-      if (!type) return;
+        const nodeID = getNodeID(type);
+        const newNode = {
+          id: nodeID,
+          type,
+          position,
+          data: getInitNodeData(nodeID, type),
+        };
 
-      const position = reactFlowInstance.project({
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
-      });
-
-      const nodeID = getNodeID(type);
-      const newNode = {
-        id: nodeID,
-        type,
-        position,
-        data: getInitNodeData(nodeID, type),
-      };
-
-      addNode(newNode);
-    }
-  }, [reactFlowInstance]);
+        addNode(newNode);
+      }
+    },
+    [reactFlowInstance]
+  );
 
   const onDragOver = useCallback((event) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
+  // I am here trackingg selected edge
+  useOnSelectionChange({
+    onChange: ({ edges: selectedEdges }) => {
+      if (selectedEdges.length > 0) {
+        setSelectedEdge(selectedEdges[0]);
+        
+        const edge = selectedEdges[0];
+        const source = nodes.find((n) => n.id === edge.source);
+        const target = nodes.find((n) => n.id === edge.target);
+        if (source && target) {
+          const x = (source.position.x + target.position.x) / 2;
+          const y = (source.position.y + target.position.y) / 2;
+          setEdgeCenter({ x, y });
+        }
+      } else {
+        setSelectedEdge(null);
+        setEdgeCenter(null);
+      }
+    },
+  });
+
+  //  For edge deletion
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedEdge) {
+        removeEdge(selectedEdge.id);
+        setSelectedEdge(null);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedEdge]);
+
   return (
-    <div className="w-full h-[80vh] bg-gray-100 border-t border-gray-300 rounded-b-lg shadow-inner" ref={reactFlowWrapper}>
+    <div
+      className="w-full h-[80vh] bg-gray-100 border-t border-gray-300 rounded-b-lg shadow-inner relative"
+      ref={reactFlowWrapper}
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -128,6 +176,24 @@ export const PipelineUI = () => {
           }}
         />
       </ReactFlow>
+
+      
+      {selectedEdge && edgeCenter && (
+        <button
+          className="absolute z-50 bg-white border border-gray-300 text-red-500 rounded-full p-1 shadow-md hover:bg-red-100"
+          style={{
+            left: edgeCenter.x,
+            top: edgeCenter.y,
+            transform: 'translate(-50%, -50%)',
+          }}
+          onClick={() => {
+            removeEdge(selectedEdge.id);
+            setSelectedEdge(null);
+          }}
+        >
+          🗑️
+        </button>
+      )}
     </div>
   );
 };

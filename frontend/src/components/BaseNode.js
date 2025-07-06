@@ -1,4 +1,5 @@
 import { Handle, Position } from 'reactflow';
+import { useStore } from '../store';
 
 export const BaseNode = ({
   id,
@@ -7,12 +8,29 @@ export const BaseNode = ({
   inputs = [],
   outputs = [],
 }) => {
+  const removeNode = useStore((state) => state.removeNode);
+
+  const handleDelete = (e) => {
+    e.stopPropagation(); 
+    console.log("Deleting node:", id);
+    removeNode(id);
+  };
+
   return (
-    <div className="bg-white border border-gray-300 rounded-xl shadow-md p-4 w-[260px] text-sm font-sans relative">
-      {/* Title */}
+    <div className="bg-white border border-gray-300 rounded-xl shadow-md p-4 w-[260px] text-sm font-sans relative z-[100]">
+      
+      <button
+        onClick={handleDelete}
+        className="absolute top-1.5 right-1.5 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-full p-1 z-50"
+        title="Delete node"
+      >
+        &times;
+      </button>
+
+      
       <div className="text-base font-semibold mb-3 text-gray-800">{title}</div>
 
-      {/* Input Handles */}
+      
       {inputs.map((input) => (
         <Handle
           key={`input-${input.id}`}
@@ -32,10 +50,10 @@ export const BaseNode = ({
         />
       ))}
 
-      {/* Node Content */}
+      
       <div className="flex flex-col gap-3">{children}</div>
 
-      {/* Output Handles */}
+      
       {outputs.map((output) => (
         <Handle
           key={`output-${output.id}`}
@@ -57,4 +75,3 @@ export const BaseNode = ({
     </div>
   );
 };
-

@@ -1,37 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Position } from 'reactflow';
-import {BaseNode} from '../components/BaseNode'; // adjust the path as needed
+import { BaseNode } from '../components/BaseNode';
+import { useStore } from '../store';
 
 export const OutputNode = ({ id, data }) => {
+  const updateNodeField = useStore((state) => state.updateNodeField);
+
   const [currName, setCurrName] = useState(data?.outputName || id.replace('customOutput-', 'output_'));
   const [outputType, setOutputType] = useState(data?.outputType || 'Text');
 
+  useEffect(() => {
+    updateNodeField(id, 'name', currName); 
+  }, []);
+
   const handleNameChange = (e) => {
-    setCurrName(e.target.value);
+    const newName = e.target.value;
+    setCurrName(newName);
+    updateNodeField(id, 'name', newName);
   };
 
   const handleTypeChange = (e) => {
     setOutputType(e.target.value);
+    updateNodeField(id, 'outputType', e.target.value);
   };
 
   return (
     <BaseNode
-      title="Output Node"
+      id={id} 
+      title="📤 Output Node"
       inputs={[{ id: `${id}-value`, position: Position.Left }]}
-      outputs={[]} // No output handles
+      outputs={[]}
     >
-      <div className="flex flex-col gap-2">
-        <label className="flex flex-col text-sm">
+      <div className="flex flex-col gap-2 text-sm text-gray-700">
+        <label className="flex flex-col">
           Name:
           <input
             type="text"
             value={currName}
             onChange={handleNameChange}
+            placeholder="output_name"
             className="border rounded px-1 py-0.5 text-sm"
           />
         </label>
 
-        <label className="flex flex-col text-sm">
+        <label className="flex flex-col">
           Type:
           <select
             value={outputType}

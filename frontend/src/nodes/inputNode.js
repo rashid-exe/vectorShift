@@ -1,23 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Position } from 'reactflow';
-import {BaseNode} from '../components/BaseNode'; 
+import { BaseNode } from '../components/BaseNode';
+import { useStore } from '../store';
 
 export const InputNode = ({ id, data }) => {
   const [currName, setCurrName] = useState(data?.inputName || id.replace('customInput-', 'input_'));
   const [inputType, setInputType] = useState(data?.inputType || 'Text');
+  const updateNodeField = useStore((state) => state.updateNodeField);
 
   const handleNameChange = (e) => {
-    setCurrName(e.target.value);
+    const newName = e.target.value;
+    setCurrName(newName);
+    updateNodeField(id, 'name', newName); 
+    updateNodeField(id, 'inputName', newName); 
   };
 
   const handleTypeChange = (e) => {
-    setInputType(e.target.value);
+    const newType = e.target.value;
+    setInputType(newType);
+    updateNodeField(id, 'inputType', newType);
   };
+
+  
+  useEffect(() => {
+    updateNodeField(id, 'name', currName);
+    updateNodeField(id, 'inputName', currName);
+    updateNodeField(id, 'inputType', inputType);
+  }, []);
 
   return (
     <BaseNode
-      title="Input Node"
-      inputs={[]} // No input handles
+      id={id} 
+      title="📥 Input"
+      inputs={[]} 
       outputs={[{ id: `${id}-value`, position: Position.Right }]}
     >
       <div className="flex flex-col gap-2">

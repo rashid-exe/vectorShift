@@ -18,10 +18,10 @@ export const SubmitButton = () => {
 
       const result = await res.json();
 
-      alert(`✅ Result:
+      alert(`Result:
 - Nodes: ${result.num_nodes}
 - Edges: ${result.num_edges}
-- Is DAG: ${result.is_dag ? '✅ Yes' : '❌ No'}
+- Is DAG: ${result.is_dag ? ' Yes' : ' No'}
 `);
     } catch (error) {
       alert('Error submitting graph: ' + error.message);
