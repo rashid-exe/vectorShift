@@ -69,6 +69,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Position } from 'reactflow';
 import { BaseNode } from '../components/BaseNode';
 import { useStore } from '../store';
+// import { useEffect, useRef } from 'react';
+import { useUpdateNodeInternals } from 'reactflow';
+
 
 export const TextNode = ({ id, data }) => {
   const textareaRef = useRef(null);
@@ -76,6 +79,14 @@ export const TextNode = ({ id, data }) => {
 
   const [text, setText] = useState(data.text || '');
   const [variables, setVariables] = useState(data.variables || []);
+  const updateNodeInternals = useUpdateNodeInternals();
+
+
+  useEffect(() => {
+    updateNodeInternals(id); // ✅ triggers re-render with new handles
+  }, [variables, id, updateNodeInternals]);
+
+
 
   // Extract variables like {{varName}}
   const extractVariables = (str) => {

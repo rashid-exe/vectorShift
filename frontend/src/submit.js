@@ -42,7 +42,7 @@ export const SubmitButton = () => {
   return (
    <div className="w-full flex justify-center mt-6">
      <button
-      className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg shadow-md transition"
+      className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1 rounded-lg shadow-md transition"
       onClick={handleSubmit}
     >
       Submit Graph
