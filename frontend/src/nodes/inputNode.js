@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Position } from 'reactflow';
-import {BaseNode} from '../components/BaseNode'; // adjust the path if needed
+import {BaseNode} from '../components/BaseNode'; 
 
 export const InputNode = ({ id, data }) => {
   const [currName, setCurrName] = useState(data?.inputName || id.replace('customInput-', 'input_'));

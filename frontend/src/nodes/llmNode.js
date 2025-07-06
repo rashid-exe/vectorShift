@@ -1,6 +1,6 @@
 import React from 'react';
 import { Position } from 'reactflow';
-import {BaseNode} from '../components/BaseNode'; // adjust path if needed
+import {BaseNode} from '../components/BaseNode'; 
 
 export const LLMNode = ({ id }) => {
   return (
